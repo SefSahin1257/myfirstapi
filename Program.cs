@@ -1,7 +1,9 @@
-var builder = WebApplication.CreateBuilder(args);
+using Microsoft.EntityFrameworkCore;
 
-// Add services to the container.
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
+var builder = WebApplication.CreateBuilder(args);
+builder.Services.AddDbContext<AppDbContext>(options => 
+options.UseSqlite("Data source=products.db"));
+
 builder.Services.AddOpenApi();
 
 var app = builder.Build();
@@ -21,17 +23,17 @@ List<Product> products = new List<Product>();
                 products.Add(sproduct);
 
 
-app.MapGet("/products",() =>
+app.MapGet("/products",(AppDbContext db) =>
 	{	
-		return products;
+		return db.Products.ToList();
 	}
 
 
 );
 
-app.MapGet("/products/{id}", (int id)=> 
+app.MapGet("/products/{id}", (int id, AppDbContext db)=> 
 	{
-	Product? foundProduct = products.FirstOrDefault(n =>n.Id == id);
+	Product? foundProduct = db.Products.FirstOrDefault(n =>n.Id == id);
 	if(foundProduct == null){
 		return Results.NotFound("Product not found!");
 	}
@@ -41,32 +43,34 @@ app.MapGet("/products/{id}", (int id)=>
 	}
 );
 
-app.MapPost("/products", (Product product)=>{
-	products.Add(product);
+app.MapPost("/products", (Product product, AppDbContext db)=>{
+	db.Products.Add(product);
+	db.SaveChanges();
 	return Results.Ok(product);
 	
 });
 
-app.MapDelete("/products/{id}", (int id) =>
+app.MapDelete("/products/{id}", (int id, AppDbContext db) =>
 	{
-	Product? foundProduct = products.FirstOrDefault(p => p.Id == id);
+	Product? foundProduct = db.Products.FirstOrDefault(p => p.Id == id);
 	if(foundProduct == null){
 		return Results.NotFound("Product not found");
 	}
-	products.Remove(foundProduct);
+	db.Products.Remove(foundProduct);
+	db.SaveChanges();
 	return Results.NoContent();
 
 });
 
-app.MapPut("/products/{id}", (int id, Product updatedProduct)=>
+app.MapPut("/products/{id}", (int id,Product updatedProduct, AppDbContext db)=>
 	{
-		Product? prd = products.FirstOrDefault(p => p.Id == id);
+		Product? prd = db.Products.FirstOrDefault(p => p.Id == id);
 		if(prd == null){
 			return Results.NotFound("Product not found");	
 		}
 		prd.Name = updatedProduct.Name;
 		prd.Price = updatedProduct.Price;
-		
+		db.SaveChanges();
 		return Results.Ok(prd);
 });
 
