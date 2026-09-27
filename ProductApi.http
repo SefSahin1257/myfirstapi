@@ -1,0 +1,14 @@
+@ProductApi_HostAddress = http://localhost:5263
+
+GET {{ProductApi_HostAddress}}/products/
+Accept: application/json
+
+###
+POST {{ProductApi_HostAddress}}/products/
+Content-Type: application/json
+
+{
+	"id" : 3,
+	"name" : "iPad Air M3",
+	"price" : 1250
+}
