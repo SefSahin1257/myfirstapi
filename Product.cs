@@ -3,8 +3,7 @@ public class Product{
 	public string Name{get; set;}
 	public decimal Price{get; set;}
 	
-	public Product(int id, string name, decimal price){
-		Id = id;
+	public Product( string name, decimal price){
 		Name = name;
 		if(price < 0){
 		throw new ArgumentException("Price cannot be negative");
