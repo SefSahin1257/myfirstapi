@@ -23,17 +23,17 @@ List<Product> products = new List<Product>();
                 products.Add(sproduct);
 
 
-app.MapGet("/products",(AppDbContext db) =>
+app.MapGet("/products",async(AppDbContext db) =>
 	{	
-		return db.Products.ToList();
+		return await db.Products.ToListAsync();
 	}
 
 
 );
 
-app.MapGet("/products/{id}", (int id, AppDbContext db)=> 
+app.MapGet("/products/{id}", async(int id, AppDbContext db)=> 
 	{
-	Product? foundProduct = db.Products.FirstOrDefault(n =>n.Id == id);
+	Product? foundProduct = await db.Products.FirstOrDefaultAsync(n =>n.Id == id);
 	if(foundProduct == null){
 		return Results.NotFound("Product not found!");
 	}
@@ -43,34 +43,34 @@ app.MapGet("/products/{id}", (int id, AppDbContext db)=>
 	}
 );
 
-app.MapPost("/products", (Product product, AppDbContext db)=>{
+app.MapPost("/products", async(Product product, AppDbContext db)=>{
 	db.Products.Add(product);
-	db.SaveChanges();
-	return Results.Ok(product);
+	await db.SaveChangesAsync();
+	return Results.Created($"/products/{product.Id}",product);
 	
 });
 
-app.MapDelete("/products/{id}", (int id, AppDbContext db) =>
+app.MapDelete("/products/{id}",async (int id, AppDbContext db) =>
 	{
-	Product? foundProduct = db.Products.FirstOrDefault(p => p.Id == id);
+	Product? foundProduct = await db.Products.FindAsync(id);
 	if(foundProduct == null){
 		return Results.NotFound("Product not found");
 	}
 	db.Products.Remove(foundProduct);
-	db.SaveChanges();
+	await db.SaveChangesAsync();
 	return Results.NoContent();
 
 });
 
-app.MapPut("/products/{id}", (int id,Product updatedProduct, AppDbContext db)=>
+app.MapPut("/products/{id}", async(int id,Product updatedProduct, AppDbContext db)=>
 	{
-		Product? prd = db.Products.FirstOrDefault(p => p.Id == id);
+		Product? prd = await db.Products.FindAsync(id);
 		if(prd == null){
 			return Results.NotFound("Product not found");	
 		}
 		prd.Name = updatedProduct.Name;
 		prd.Price = updatedProduct.Price;
-		db.SaveChanges();
+		await db.SaveChangesAsync();
 		return Results.Ok(prd);
 });
 
