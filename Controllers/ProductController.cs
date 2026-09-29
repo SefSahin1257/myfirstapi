@@ -3,53 +3,52 @@ using Microsoft.EntityFrameworkCore;
 [ApiController]
 [Route("api/[controller]")]
 public class ProductController : ControllerBase{
-	private readonly AppDbContext _db;
+	private readonly IProductService _productService;
 	
-	public ProductController(AppDbContext db){
-	_db = db;
+	public ProductController(IProductService productService){
+	_productService = productService;
 	}
 
 	[HttpGet]
 	public async Task<IActionResult> GetProducts(){
-	var products = await _db.Products.ToListAsync();
-	return Ok(products);
+	var products = await _productService.GetAllAsync();
+	var dtoProducts = products.Select(ToDto).ToList();
+	return Ok(dtoProducts);
 	}
 	
 	[HttpGet("{id}")]
 	public async Task<IActionResult> GetProduct(int id){
-	var product = await _db.Products.FindAsync(id);
-	if(product == null){
-		return NotFound();
-	}
-	return Ok(product);	
+	var product = await _productService.GetByIdAsync(id);
+	if(product == null) return NotFound();
+	return Ok(ToDto(product));	
 	}
 	
 	[HttpPost]
 	public async Task<IActionResult> CreateProduct(CreateProductDto dto){
-	var prd = new Product(dto.Name, dto.Price);
-	_db.Products.Add(prd);
-	await _db.SaveChangesAsync();
-	return Created($"/api/product/{prd.Id}", prd);
+	  var prd = await _productService.CreateAsync(dto);
+	  return Created($"/api/product/{prd.Id}", ToDto(prd));	
 	}
 	
 	[HttpPut("{id}")]
 	public async Task<IActionResult> UpdateProduct(int id, UpdateProductDto dto){
-	var prd = await _db.Products.FindAsync(id);
-	if(prd == null){
-	return NotFound();
-	}
-	prd.Name = dto.Name;
-	prd.Price = dto.Price;
-	await _db.SaveChangesAsync();
-	return Ok(prd);
+	var product = await _productService.UpdateAsync(id,dto);
+	if(product == null) return NotFound();
+	return Ok(ToDto(product));
 	}	
 
 	[HttpDelete("{id}")]
 	public async Task<IActionResult> DeleteProduct(int id){
-	var prd = await _db.Products.FindAsync(id);
-	if(prd == null) return NotFound();
-	_db.Products.Remove(prd);
-	await _db.SaveChangesAsync();
+	var prd = await _productService.DeleteAsync(id);
+	if(!prd) return NotFound();
+	
 	return NoContent();
+	}
+	
+	private static ProductDto ToDto(Product product){
+	 return new ProductDto{
+	  Id = product.Id,
+	  Name = product.Name,
+	  Price = product.Price
+	  };
 	}
 }
