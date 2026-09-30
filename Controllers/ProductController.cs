@@ -10,8 +10,8 @@ public class ProductController : ControllerBase{
 	}
 
 	[HttpGet]
-	public async Task<IActionResult> GetProducts(){
-	var products = await _productService.GetAllAsync();
+	public async Task<IActionResult> GetProducts(int page = 1, int pageSize = 10){
+	var products = await _productService.GetAllAsync(page, pageSize);
 	var dtoProducts = products.Select(ToDto).ToList();
 	return Ok(dtoProducts);
 	}
@@ -51,4 +51,5 @@ public class ProductController : ControllerBase{
 	  Price = product.Price
 	  };
 	}
+	
 }

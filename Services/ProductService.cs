@@ -1,41 +1,52 @@
-using Microsoft.EntityFrameworkCore;
 public class ProductService : IProductService {
-	private readonly AppDbContext _db;
-	public ProductService(AppDbContext db){
-		_db = db;
+	private readonly IProductRepository _repository;
+	private readonly ILogger<ProductService> _logger;
+	public ProductService(IProductRepository productRepository, ILogger<ProductService> logger){
+		_repository = productRepository;
+		_logger = logger; 
 	}
 
 	public async Task<Product?> GetByIdAsync(int id){
-	var prdId = await _db.Products.FindAsync(id);
+	var prdId = await _repository.GetByIdAsync(id);
 	return prdId;
 	}
 
-	public async Task<List<Product>> GetAllAsync(){
-	var products = await _db.Products.ToListAsync();
+	public async Task<List<Product>> GetAllAsync(int page, int pageSize){
+	if(page < 1){
+          throw new ArgumentException("Page değeri 1 veya daha büyük olmalı.");
+	}
+	if(pageSize < 1 || pageSize > 100){
+	  throw new ArgumentException("PageSize değeri 1 ile 100 arasında olmalıdır.");
+	}
+	var products = await _repository.GetAllAsync(page, pageSize);
 	return products;
 	}
 	
 	public async Task<Product> CreateAsync(CreateProductDto dto){
 	var product = new Product(dto.Name, dto.Price);
-	_db.Products.Add(product);
-	await _db.SaveChangesAsync();
-	return product;
+	var createdProduct = await _repository.AddAsync(product);
+	
+	_logger.LogInformation(
+	 "Ürün oluşturuldu. ProductId = {ProductId}, Name = {ProductName}",
+	 createdProduct.Id,
+	 createdProduct.Name
+	);
+	 return createdProduct;
 	}
 
 	public async Task<Product?> UpdateAsync(int id, UpdateProductDto dto){
-	var product = await GetByIdAsync(id);
+	var product = await _repository.GetByIdAsync(id);
 	if(product == null) return null;
 	product.Name = dto.Name;
 	product.Price = dto.Price;
-        await _db.SaveChangesAsync();
+        await _repository.UpdateAsync(product);
 	return product;
 	}
 
 	public async Task<bool> DeleteAsync(int id){
-	var product = await GetByIdAsync(id);
+	var product = await _repository.GetByIdAsync(id);
 	if(product == null) return false;
-	_db.Products.Remove(product);
-	await _db.SaveChangesAsync();
+	await _repository.DeleteAsync(product);
 	return true;
 	}
 }
