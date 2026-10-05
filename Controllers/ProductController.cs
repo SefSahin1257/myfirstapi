@@ -1,5 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authorization;
+
+
 [ApiController]
 [Route("api/[controller]")]
 public class ProductController : ControllerBase{
@@ -8,7 +11,8 @@ public class ProductController : ControllerBase{
 	public ProductController(IProductService productService){
 	_productService = productService;
 	}
-
+	
+	[Authorize]
 	[HttpGet]
 	public async Task<IActionResult> GetProducts(int page = 1, int pageSize = 10){
 	var products = await _productService.GetAllAsync(page, pageSize);
