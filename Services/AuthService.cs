@@ -18,7 +18,7 @@ public class AuthService : IAuthService{
   var usernameExists = await _userRepository.UsernameExistsAsync(dto.Username);
  
   if(usernameExists){
-   throw new ArgumentException("Bu kullanıcı adı zaten kullanılıyor.");
+   throw new ConflictException("Bu kullanıcı adı zaten kullanılıyor.");
   }
   var user = new User{
     Name = dto.Name,

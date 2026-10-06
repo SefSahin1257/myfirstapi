@@ -6,20 +6,34 @@ public class ProductService : IProductService {
 		_logger = logger; 
 	}
 
-	public async Task<Product?> GetByIdAsync(int id){
-	var prdId = await _repository.GetByIdAsync(id);
-	return prdId;
+	public async Task<Product> GetByIdAsync(int id){
+         var prd =  await _repository.GetByIdAsync(id);
+	 if(prd == null){
+    	  throw new NotFoundException("Ürün bulunamadı.");
+         }
+ 	 return prd; 
 	}
 
-	public async Task<List<Product>> GetAllAsync(int page, int pageSize){
+	public async Task<PagedResultDto<Product>> GetAllAsync(int page, int pageSize){
 	if(page < 1){
           throw new ArgumentException("Page değeri 1 veya daha büyük olmalı.");
 	}
 	if(pageSize < 1 || pageSize > 100){
 	  throw new ArgumentException("PageSize değeri 1 ile 100 arasında olmalıdır.");
 	}
+
 	var products = await _repository.GetAllAsync(page, pageSize);
-	return products;
+	var totalCount = await _repository.CountAsync();
+	
+	var totalPages = (int)Math.Ceiling((double)totalCount / pageSize);  	
+
+	return new PagedResultDto<Product>{
+ 	  Items = products,
+	  Page = page,
+	  PageSize = pageSize,
+	  TotalCount = totalCount,
+	  TotalPages = totalPages
+	 };
 	}
 	
 	public async Task<Product> CreateAsync(CreateProductDto dto){
@@ -34,19 +48,23 @@ public class ProductService : IProductService {
 	 return createdProduct;
 	}
 
-	public async Task<Product?> UpdateAsync(int id, UpdateProductDto dto){
+	public async Task<Product> UpdateAsync(int id, UpdateProductDto dto){
 	var product = await _repository.GetByIdAsync(id);
-	if(product == null) return null;
+	if(product == null){
+ 	 throw new NotFoundException("Ürün bulunamadı.");
+        }
+
 	product.Name = dto.Name;
 	product.Price = dto.Price;
         await _repository.UpdateAsync(product);
 	return product;
 	}
 
-	public async Task<bool> DeleteAsync(int id){
+	public async Task DeleteAsync(int id){
 	var product = await _repository.GetByIdAsync(id);
-	if(product == null) return false;
+	if(product == null){
+	 throw new NotFoundException("Ürün bulunamadı");
+	}
 	await _repository.DeleteAsync(product);
-	return true;
 	}
 }

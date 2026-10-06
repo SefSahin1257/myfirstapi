@@ -34,5 +34,8 @@ using Microsoft.EntityFrameworkCore;
   _db.Products.Remove(product);
   await _db.SaveChangesAsync();
  }
-	
+
+ public async Task<int> CountAsync(){
+  return await _db.Products.CountAsync();
+ }	
 }
