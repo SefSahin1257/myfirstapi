@@ -66,8 +66,15 @@ public class AuthService : IAuthService{
  private string GenerateJwtToken(User user){  
   var claims = new List<Claim>{
    new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-   new Claim(ClaimTypes.NameIdentifier, user.Username)
+   new Claim(ClaimTypes.Name, user.Username),
+   new Claim(ClaimTypes.Role, user.Role)
   };
+  if(user.Role == "Admin"){
+   // claims.Add(new Claim("Permission", "ManageProducts"));}
+
+   var claim = new Claim("Permission", "ManageProducts");
+   claims.Add(claim);
+  }
  
   var jwtKey = _configuration["Jwt:Key"];
   if(jwtKey == null){

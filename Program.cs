@@ -34,7 +34,16 @@ options.UseSqlite(
 	builder.Configuration.GetConnectionString("DefaultConnection")
 	)
 );
-builder.Services.AddAuthorization();
+builder.Services.AddAuthorization(options => {
+  options.AddPolicy("AdminOnly", policy => {
+ 	policy.RequireRole("Admin");
+   });
+  
+  options.AddPolicy("CanManageProducts", policy => {
+   policy.RequireRole("Admin");
+   policy.RequireClaim("Permission", "ManageProducts");
+  });
+ });
 builder.Services.AddOpenApi();
 builder.Services.AddControllers();
 builder.Services.AddScoped<IProductService, ProductService>();

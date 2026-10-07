@@ -33,18 +33,19 @@ public class ProductController : ControllerBase{
 	return Ok(ToDto(product));	
 	}
 	
+	[Authorize(Policy = "CanManageProducts")]
 	[HttpPost]
 	public async Task<IActionResult> CreateProduct(CreateProductDto dto){
 	  var prd = await _productService.CreateAsync(dto);
 	  return CreatedAtAction(nameof(GetProduct),new { id = prd.Id }, ToDto(prd));	
 	}
-	
+	[Authorize(Policy = "CanManageProducts")]
 	[HttpPut("{id}")]
 	public async Task<IActionResult> UpdateProduct(int id, UpdateProductDto dto){
 	var product = await _productService.UpdateAsync(id,dto);
 	return Ok(ToDto(product));
 	}	
-
+	[Authorize(Policy = "CanManageProducts")]
 	[HttpDelete("{id}")]
 	public async Task<IActionResult> DeleteProduct(int id){
 	 await _productService.DeleteAsync(id);
