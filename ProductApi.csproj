@@ -17,5 +17,7 @@
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.4" />
     <PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3" Version="2.1.13" />
   </ItemGroup>
-
+  <ItemGroup>
+    <Compile Remove="ProductApi.Tests/**/*.cs" />
+  </ItemGroup>
 </Project>
