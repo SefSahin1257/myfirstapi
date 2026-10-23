@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims;
+using ProductApi.Application.Interfaces;
+using ProductApi.Application.Dtos;
 
 [ApiController]
 [Route("api/[controller]")]

@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc.Testing;
 using System.Net;
 using System.Net.Http.Json;
+using ProductApi.Domain.Entities;
 
 public class ProductApiIntegrationTests{
  
@@ -35,24 +36,33 @@ public class ProductApiIntegrationTests{
  [Fact]
  public async Task CreateProduct_ThenGetProducts_ReturnsCreatedProduct()
  {
+  // Arrange
   using var factory = new CustomWebApplicationFactory();
   using var client = factory.CreateClient();
 
   var newProduct = new
   {
    Name = "Test Laptop",
-   Price = 25000m
+   Price = 25000m,
+   CategoryId = 1
   };
-  //Act - Ürünü oluştur
-  var postResponse = await client.PostAsJsonAsync("/api/product", newProduct);
-  
-  //Assert - Ürün oluşturuldu mu? kontrolü yapılır
-  Assert.Equal(HttpStatusCode.Created, postResponse.StatusCode);
-  
-  //Act - Ürünleri listele
+
+  // Act - Ürünü oluştur
+  var postResponse = await client.PostAsJsonAsync(
+   "/api/product", newProduct);
+
+  // Assert - Ürün oluşturuldu mu?
+  var errorBody = await postResponse.Content.ReadAsStringAsync();
+
+  Assert.True(
+   postResponse.StatusCode == HttpStatusCode.Created,
+   $"HTTP Status: {(int)postResponse.StatusCode}\nResponse: {errorBody}"
+  );
+
+  // Act - Ürünleri listele
   var getResponse = await client.GetAsync("/api/product");
-  
-  //Assert - Listeleme başarılı mı?
+
+  // Assert
   getResponse.EnsureSuccessStatusCode();
 
   var responseBody = await getResponse.Content.ReadAsStringAsync();
@@ -72,11 +82,13 @@ public class ProductApiIntegrationTests{
   var newProduct = new
   {
    Name = "Test Telefon",
-   Price = 15000m
+   Price = 15000m,
+   CategoryId = 1
   };
   
   //Act
   var response = await client.PostAsJsonAsync("/api/product", newProduct);
+  
   
   //Assert
   Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);

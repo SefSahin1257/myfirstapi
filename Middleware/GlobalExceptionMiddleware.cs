@@ -1,4 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
+using ProductApi.Application.Exceptions;
+
 public class GlobalExceptionMiddleware {
   private readonly RequestDelegate _next;
   private readonly ILogger<GlobalExceptionMiddleware> _logger;  

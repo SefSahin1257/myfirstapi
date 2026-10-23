@@ -22,4 +22,15 @@
   <Content Remove="ProductApi.Tests/**" />
   <None Remove="ProductApi.Tests/**" />
 </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="ProductApi.Application\ProductApi.Application.csproj" />
+    <ProjectReference Include="ProductApi.Infrastructure\ProductApi.Infrastructure.csproj" />
+    <ProjectReference Include="ProductApi.Domain\ProductApi.Domain.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Remove="ProductApi.Domain/**/*.cs" />
+    <Compile Remove="ProductApi.Application/**/*.cs" />
+    <Compile Remove="ProductApi.Infrastructure/**/*.cs" />
+    <Compile Remove="ProductApi.Tests/**/*.cs" />
+  </ItemGroup>
 </Project>

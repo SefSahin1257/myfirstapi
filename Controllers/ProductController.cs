@@ -1,5 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
+using ProductApi.Domain.Entities;
+using ProductApi.Application.Interfaces;
+using ProductApi.Application.Dtos;
 
 [ApiController]
 [Route("api/[controller]")]
@@ -12,8 +15,8 @@ public class ProductController : ControllerBase{
 	
 	[Authorize]
 	[HttpGet]
-	public async Task<IActionResult> GetProducts(int page = 1, int pageSize = 10){
-	var result = await _productService.GetAllAsync(page, pageSize);
+	public async Task<IActionResult> GetProducts(int page = 1, int pageSize = 10, int? categoryId = null){
+	var result = await _productService.GetAllAsync(page, pageSize, categoryId);
         
 	var response = new PagedResultDto<ProductDto>
 	 {
@@ -56,7 +59,9 @@ public class ProductController : ControllerBase{
 	 return new ProductDto{
 	  Id = product.Id,
 	  Name = product.Name,
-	  Price = product.Price
+	  Price = product.Price,
+	  CategoryId = product.CategoryId,
+	  CategoryName = product.Category?.Name ?? string.Empty
 	  };
 	}
 	

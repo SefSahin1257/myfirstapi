@@ -1,7 +1,13 @@
 using Microsoft.Extensions.Logging;
-using Moq;
+using Moq; 
+using ProductApi.Domain.Entities;
+using ProductApi.Application.Interfaces;
+using ProductApi.Application.Services;
+using ProductApi.Application.Dtos; 
+using ProductApi.Application.Exceptions;
 
 namespace ProductApi.Tests;
+
 
 public class ProductServiceTests
 {
@@ -23,7 +29,7 @@ public class ProductServiceTests
 
         // Act + Assert
         await Assert.ThrowsAsync<ArgumentException>(
-            () => service.GetAllAsync(page, pageSize)
+            () => service.GetAllAsync(page, pageSize, null)
         );
     }	    
 
@@ -41,11 +47,11 @@ public class ProductServiceTests
 	};
   
  	repositoryMock
-		.Setup(r => r.GetAllAsync(1,10))
+		.Setup(r => r.GetAllAsync(1,10, null))
 	 	.ReturnsAsync(products);
 	
 	repositoryMock
-		.Setup(r => r.CountAsync())	
+		.Setup(r => r.CountAsync(null))	
 		.ReturnsAsync(2);
 	
         var service = new ProductService(
@@ -54,7 +60,7 @@ public class ProductServiceTests
         );
 
         // Act + Assert
-	var result = await service.GetAllAsync(1,10);
+	var result = await service.GetAllAsync(1,10, null);
 	
 	//Assert
 	Assert.Equal(2, result.Items.Count);
@@ -64,12 +70,12 @@ public class ProductServiceTests
 	Assert.Equal(1, result.TotalPages);
 
 	repositoryMock.Verify(
-  		  r => r.GetAllAsync(1, 10),
+  		  r => r.GetAllAsync(1, 10, null),
 		  Times.Once
 		 );
 
 	repositoryMock.Verify(
-    		r => r.CountAsync(),
+    		r => r.CountAsync(null),
     		Times.Once
 		);	
     }
@@ -250,6 +256,44 @@ public class ProductServiceTests
 	r => r.UpdateAsync(product),
 	Times.Once);
  }
- 
+
+ [Fact]
+ public async Task GetAllAsync_WithCategoryId_FiltersProducts()
+ {
+	 var repositoryMock = new Mock<IProductRepository>();
+	 var loggerMock = new Mock<ILogger<ProductService>>();
+
+	 var products = new List<Product>
+	 {
+		 new Product("iPhone 16", 55000) { CategoryId = 2 },
+		 new Product("Samsung S24", 40000) { CategoryId = 2 }
+
+	 };
+
+	 repositoryMock
+		 .Setup(r => r.GetAllAsync(1, 10,2))
+		 .ReturnsAsync(products);
+
+	 repositoryMock
+		 .Setup(r => r.CountAsync(2))
+		 .ReturnsAsync(2);
+
+	 var service = new ProductService(
+		 repositoryMock.Object,
+		 loggerMock.Object);
+
+	 var result = await service.GetAllAsync(1, 10, 2);
+	 
+	 Assert.Equal(2, result.Items.Count);
+	 Assert.Equal(2, result.TotalCount);
+	 Assert.All(result.Items, p => Assert.Equal(2, p.CategoryId));
+
+	 repositoryMock.Verify(
+		 r => r.GetAllAsync(1,10,2), Times.Once);
+	 
+	 repositoryMock.Verify(
+		 r => r.CountAsync(2), Times.Once);
+ }
+
 }
 

@@ -488,3 +488,9 @@ $RECYCLE.BIN/
 
 
 **/TestResults/
+
+# Yerel veritabanı ve gizli ayarlar
+*.sqbpro
+*.db-journal
+.env.*
+appsettings.Local.json

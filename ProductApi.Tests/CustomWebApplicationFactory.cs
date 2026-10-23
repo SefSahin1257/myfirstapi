@@ -8,6 +8,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using ProductApi.Domain.Entities;
+using ProductApi.Infrastructure.Data;
 
 public class CustomWebApplicationFactory : WebApplicationFactory<Program>
 {
@@ -46,6 +48,10 @@ public class CustomWebApplicationFactory : WebApplicationFactory<Program>
                 .GetRequiredService<AppDbContext>();
 
             dbContext.Database.EnsureCreated();
+
+            dbContext.Categories.Add(new Category { Name = "Bilgisayar" });
+
+            dbContext.SaveChanges();
         }
 
         return host;

@@ -3,6 +3,13 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using ProductApi.Application.Interfaces;
+using ProductApi.Infrastructure.Data;
+using ProductApi.Infrastructure.Repositories;
+using ProductApi.Application.Services;
+using ProductApi.Infrastructure.Securty;
+	
+
 var builder = WebApplication.CreateBuilder(args);
 var jwtKey = builder.Configuration["Jwt:Key"];
 if(jwtKey == null){
@@ -51,7 +58,9 @@ builder.Services.AddScoped<IProductRepository, ProductRepository>();
 
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IAuthService, AuthService>();
-builder.Services.AddScoped<PasswordHasher<User>>();
+
+builder.Services.AddScoped<IPasswordService, PasswordService>();
+builder.Services.AddScoped<ITokenService, TokenService>();
 
 var app = builder.Build();
 app.UseMiddleware<GlobalExceptionMiddleware>();
