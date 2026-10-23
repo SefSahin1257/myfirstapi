@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc.Testing;
 using System.Net;
 using System.Net.Http.Json;
 using ProductApi.Domain.Entities;
+using Microsoft.AspNetCore.Mvc;
 
 public class ProductApiIntegrationTests{
  
@@ -110,5 +111,39 @@ public class ProductApiIntegrationTests{
   var response = await client.PostAsJsonAsync("/api/product",invalidPrice);
   
   Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+ }
+ 
+ [Fact]
+ public async Task Register_WithEmptyFields_ReturnsValidationErrors()
+ {
+  using var factory = new CustomWebApplicationFactory();
+  using var client = factory.CreateClient();
+
+  var response = await client.PostAsJsonAsync(
+   "/api/Auth/register",
+   new
+   {
+    Name = "",
+    Username = "",
+    Password = ""
+   });
+
+  Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+
+  var problem = await response.Content.ReadFromJsonAsync<ValidationProblemDetails>();
+
+  Assert.NotNull(problem);
+
+  Assert.Collection(
+   problem.Errors["Name"],
+   message => Assert.Equal("Ad boş olamaz.", message));
+
+  Assert.Collection(
+   problem.Errors["Username"],
+   message => Assert.Equal("Kullanıcı adı boş olamaz.", message));
+
+  Assert.Collection(
+   problem.Errors["Password"],
+   message => Assert.Equal("Şifre boş olamaz.", message));
  }
 }

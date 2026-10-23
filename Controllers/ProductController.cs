@@ -3,14 +3,22 @@ using Microsoft.AspNetCore.Authorization;
 using ProductApi.Domain.Entities;
 using ProductApi.Application.Interfaces;
 using ProductApi.Application.Dtos;
+using FluentValidation;
 
 [ApiController]
 [Route("api/[controller]")]
 public class ProductController : ControllerBase{
 	private readonly IProductService _productService;
+	private readonly IValidator<CreateProductDto> _createValidator;
+	private readonly IValidator<UpdateProductDto> _updateValidator;
 	
-	public ProductController(IProductService productService){
+	public ProductController(IProductService productService, 
+		IValidator<CreateProductDto> createValidator, 
+		IValidator<UpdateProductDto> updateValidator)
+	{
 	_productService = productService;
+	_createValidator = createValidator;
+	_updateValidator = updateValidator;
 	}
 	
 	[Authorize]
@@ -30,30 +38,68 @@ public class ProductController : ControllerBase{
   	return Ok(response);
 	}
 	
+	
 	[HttpGet("{id}")]
 	public async Task<IActionResult> GetProduct(int id){
 	var product = await _productService.GetByIdAsync(id);
 	return Ok(ToDto(product));	
 	}
 	
+	
 	[Authorize(Policy = "CanManageProducts")]
 	[HttpPost]
-	public async Task<IActionResult> CreateProduct(CreateProductDto dto){
-	  var prd = await _productService.CreateAsync(dto);
-	  return CreatedAtAction(nameof(GetProduct),new { id = prd.Id }, ToDto(prd));	
+	public async Task<IActionResult> CreateProduct(CreateProductDto dto)
+	{
+		var validationResult = await _createValidator.ValidateAsync(dto);
+
+		if (!validationResult.IsValid)
+		{
+			foreach (var error in validationResult.Errors )
+			{
+				ModelState.AddModelError(error.PropertyName, error.ErrorMessage);
+			}
+
+			return ValidationProblem(ModelState);
+		}
+
+		var product = await _productService.CreateAsync(dto);
+
+		return CreatedAtAction(
+			nameof(GetProduct), 
+			new { id = product.Id }, 
+			ToDto(product));
 	}
+	
+	
 	[Authorize(Policy = "CanManageProducts")]
 	[HttpPut("{id}")]
-	public async Task<IActionResult> UpdateProduct(int id, UpdateProductDto dto){
-	var product = await _productService.UpdateAsync(id,dto);
-	return Ok(ToDto(product));
+	public async Task<IActionResult> UpdateProduct(int id, UpdateProductDto dto)
+	{
+		var validationResult = await _updateValidator.ValidateAsync(dto);
+
+		if (!validationResult.IsValid)
+		{
+			foreach (var error in validationResult.Errors)
+			{
+				ModelState.AddModelError(error.PropertyName, error.ErrorMessage);
+			}
+
+			return ValidationProblem(ModelState);
+		}
+
+		var product = await _productService.UpdateAsync(id, dto);
+
+		return Ok(ToDto(product));
 	}	
+	
+	
 	[Authorize(Policy = "CanManageProducts")]
 	[HttpDelete("{id}")]
 	public async Task<IActionResult> DeleteProduct(int id){
 	 await _productService.DeleteAsync(id);
 	 return NoContent();
 	}
+	
 	
 	private static ProductDto ToDto(Product product){
 	 return new ProductDto{

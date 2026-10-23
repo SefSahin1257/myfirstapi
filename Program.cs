@@ -8,7 +8,9 @@ using ProductApi.Infrastructure.Data;
 using ProductApi.Infrastructure.Repositories;
 using ProductApi.Application.Services;
 using ProductApi.Infrastructure.Securty;
-	
+using FluentValidation;
+using ProductApi.Application.Dtos;
+using ProductApi.Application.Validators;
 
 var builder = WebApplication.CreateBuilder(args);
 var jwtKey = builder.Configuration["Jwt:Key"];
@@ -61,6 +63,11 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 
 builder.Services.AddScoped<IPasswordService, PasswordService>();
 builder.Services.AddScoped<ITokenService, TokenService>();
+
+builder.Services.AddScoped<IValidator<CreateProductDto>, CreateProductDtoValidator>();
+builder.Services.AddScoped<IValidator<UpdateProductDto>, UpdateProductDtoValidator>();
+builder.Services.AddScoped<IValidator<RegisterUserDto>, RegisterUserDtoValidator>();
+builder.Services.AddScoped<IValidator<LoginUserDto>, LoginUserDtoValidator>();
 
 var app = builder.Build();
 app.UseMiddleware<GlobalExceptionMiddleware>();
