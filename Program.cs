@@ -11,6 +11,7 @@ using ProductApi.Infrastructure.Securty;
 using FluentValidation;
 using ProductApi.Application.Dtos;
 using ProductApi.Application.Validators;
+using ProductApi.Application.Mappings;
 
 var builder = WebApplication.CreateBuilder(args);
 var jwtKey = builder.Configuration["Jwt:Key"];
@@ -68,6 +69,8 @@ builder.Services.AddScoped<IValidator<CreateProductDto>, CreateProductDtoValidat
 builder.Services.AddScoped<IValidator<UpdateProductDto>, UpdateProductDtoValidator>();
 builder.Services.AddScoped<IValidator<RegisterUserDto>, RegisterUserDtoValidator>();
 builder.Services.AddScoped<IValidator<LoginUserDto>, LoginUserDtoValidator>();
+
+builder.Services.AddAutoMapper(cfg => { }, typeof(ProductMappingProfile));
 
 var app = builder.Build();
 app.UseMiddleware<GlobalExceptionMiddleware>();

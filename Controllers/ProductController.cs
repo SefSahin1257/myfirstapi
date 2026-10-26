@@ -4,6 +4,7 @@ using ProductApi.Domain.Entities;
 using ProductApi.Application.Interfaces;
 using ProductApi.Application.Dtos;
 using FluentValidation;
+using AutoMapper;
 
 [ApiController]
 [Route("api/[controller]")]
@@ -11,14 +12,17 @@ public class ProductController : ControllerBase{
 	private readonly IProductService _productService;
 	private readonly IValidator<CreateProductDto> _createValidator;
 	private readonly IValidator<UpdateProductDto> _updateValidator;
-	
-	public ProductController(IProductService productService, 
-		IValidator<CreateProductDto> createValidator, 
-		IValidator<UpdateProductDto> updateValidator)
+	private readonly IMapper _mapper;
+
+	public ProductController(IProductService productService,
+		IValidator<CreateProductDto> createValidator,
+		IValidator<UpdateProductDto> updateValidator,
+		IMapper mapper)
 	{
 	_productService = productService;
 	_createValidator = createValidator;
 	_updateValidator = updateValidator;
+	_mapper = mapper;
 	}
 	
 	[Authorize]
@@ -28,7 +32,7 @@ public class ProductController : ControllerBase{
         
 	var response = new PagedResultDto<ProductDto>
 	 {
- 	  Items = result.Items.Select(ToDto).ToList(),
+ 	  Items = _mapper.Map<List<ProductDto>>(result.Items),
 	  Page = result.Page,
 	  PageSize = result.PageSize,
 	  TotalCount = result.TotalCount,
@@ -42,7 +46,7 @@ public class ProductController : ControllerBase{
 	[HttpGet("{id}")]
 	public async Task<IActionResult> GetProduct(int id){
 	var product = await _productService.GetByIdAsync(id);
-	return Ok(ToDto(product));	
+	return Ok(_mapper.Map<ProductDto>(product));	
 	}
 	
 	
@@ -67,7 +71,7 @@ public class ProductController : ControllerBase{
 		return CreatedAtAction(
 			nameof(GetProduct), 
 			new { id = product.Id }, 
-			ToDto(product));
+			_mapper.Map<ProductDto>(product));
 	}
 	
 	
@@ -89,7 +93,7 @@ public class ProductController : ControllerBase{
 
 		var product = await _productService.UpdateAsync(id, dto);
 
-		return Ok(ToDto(product));
+		return Ok(_mapper.Map<ProductDto>(product));
 	}	
 	
 	
@@ -98,17 +102,6 @@ public class ProductController : ControllerBase{
 	public async Task<IActionResult> DeleteProduct(int id){
 	 await _productService.DeleteAsync(id);
 	 return NoContent();
-	}
-	
-	
-	private static ProductDto ToDto(Product product){
-	 return new ProductDto{
-	  Id = product.Id,
-	  Name = product.Name,
-	  Price = product.Price,
-	  CategoryId = product.CategoryId,
-	  CategoryName = product.Category?.Name ?? string.Empty
-	  };
 	}
 	
 }
