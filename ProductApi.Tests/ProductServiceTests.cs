@@ -21,10 +21,12 @@ public class ProductServiceTests
         // Arrange
         var repositoryMock = new Mock<IProductRepository>();
         var loggerMock = new Mock<ILogger<ProductService>>();
+        var cacheMock = new Mock<ICacheService>();
 
         var service = new ProductService(
             repositoryMock.Object,
-            loggerMock.Object
+            loggerMock.Object,
+            cacheMock.Object
         );
 
         // Act + Assert
@@ -39,6 +41,7 @@ public class ProductServiceTests
         // Arrange
         var repositoryMock = new Mock<IProductRepository>();
         var loggerMock = new Mock<ILogger<ProductService>>();
+        var cacheMock = new Mock<ICacheService>();
 
 	var products = new List<Product>
 	{
@@ -56,10 +59,10 @@ public class ProductServiceTests
 	
         var service = new ProductService(
             repositoryMock.Object,
-            loggerMock.Object
+            loggerMock.Object,
+            cacheMock.Object
         );
-
-        // Act + Assert
+	// Act + Assert
 	var result = await service.GetAllAsync(1,10, null);
 	
 	//Assert
@@ -84,6 +87,7 @@ public class ProductServiceTests
     public async Task DeleteAsync_ProductNotFound_ThrowsNotFoundException(){
      var repositoryMock = new Mock<IProductRepository>();
      var loggerMock = new Mock<ILogger<ProductService>>();
+     var cacheMock = new Mock<ICacheService>();
      
      repositoryMock
 	.Setup(r => r.GetByIdAsync(999))
@@ -91,7 +95,8 @@ public class ProductServiceTests
 
      var service = new ProductService(
 	 repositoryMock.Object,
-	 loggerMock.Object);
+	 loggerMock.Object,
+	 cacheMock.Object);
 
      
     //Act + Assert
@@ -107,6 +112,7 @@ public class ProductServiceTests
     
     var repositoryMock = new Mock<IProductRepository>();
     var loggerMock = new Mock<ILogger<ProductService>>();
+    var cacheMock = new Mock<ICacheService>();
 
     var product = new Product("Laptop", 30000);
     
@@ -116,7 +122,8 @@ public class ProductServiceTests
     
     var service = new ProductService(
 	 repositoryMock.Object,
-	 loggerMock.Object
+	 loggerMock.Object,
+	 cacheMock.Object
 	);
 
     await service.DeleteAsync(1);
@@ -129,6 +136,7 @@ public class ProductServiceTests
    public async Task GetByIdAsync_ProductExists_ReturnsProduct(){
     var repositoryMock = new Mock<IProductRepository>();
     var loggerMock = new Mock<ILogger<ProductService>>();
+    var cacheMock = new Mock<ICacheService>();
 
     var product = new Product("Laptop", 30000);
 
@@ -138,7 +146,9 @@ public class ProductServiceTests
 
     var service = new ProductService(
 	 repositoryMock.Object,
-	 loggerMock.Object);
+	 loggerMock.Object,
+	 cacheMock.Object
+	 );
    
     var result = await service.GetByIdAsync(1);
 
@@ -154,6 +164,7 @@ public class ProductServiceTests
 
    var repositoryMock = new Mock<IProductRepository>();
    var loggerMock = new Mock<ILogger<ProductService>>();
+   var cacheMock = new Mock<ICacheService>();
 
    repositoryMock
 	.Setup(r => r.GetByIdAsync(999))
@@ -161,7 +172,9 @@ public class ProductServiceTests
    
    var service = new ProductService(
    	repositoryMock.Object,
-	loggerMock.Object);
+	loggerMock.Object,
+    cacheMock.Object
+    );
 
   await Assert.ThrowsAsync<NotFoundException>(
 	() => service.GetByIdAsync(999));
@@ -175,6 +188,7 @@ public class ProductServiceTests
  public async Task CreateAsync_ValidDto_CreatesProduct(){
   var repositoryMock = new Mock<IProductRepository>();
   var loggerMock = new Mock<ILogger<ProductService>>();
+  var cacheMock = new Mock<ICacheService>();
 
   var dto = new CreateProductDto{
     Name = "Laptop",	
@@ -187,7 +201,9 @@ public class ProductServiceTests
 
   var service = new ProductService(
 	repositoryMock.Object,
-	loggerMock.Object);
+	loggerMock.Object,
+	cacheMock.Object
+	);
 
   var result = await service.CreateAsync(dto);
 
@@ -204,6 +220,7 @@ public class ProductServiceTests
  public async Task UpdateAsync_ProductNotFound_ThrowsNotFoundException(){
   var repositoryMock = new Mock<IProductRepository>();
   var loggerMock = new Mock<ILogger<ProductService>>();
+  var cacheMock = new Mock<ICacheService>();
 
   var dto = new UpdateProductDto{
    Name = "Yeni Laptop",
@@ -216,7 +233,9 @@ public class ProductServiceTests
 
   var service = new ProductService(
 	repositoryMock.Object,
-	loggerMock.Object);
+	loggerMock.Object,
+	cacheMock.Object
+	);
 
  await Assert.ThrowsAsync<NotFoundException>(
 	() => service.UpdateAsync(999, dto));
@@ -230,6 +249,7 @@ public class ProductServiceTests
  public async Task UpdateAsync_ProductExists_UpdatesProduct(){
   var repositoryMock = new Mock<IProductRepository>();
   var loggerMock = new Mock<ILogger<ProductService>>();
+  var cacheMock = new Mock<ICacheService>();
 
   var product = new Product("Laptop", 30000);
   
@@ -244,7 +264,9 @@ public class ProductServiceTests
 
   var service = new ProductService(
 	repositoryMock.Object,
-	loggerMock.Object);
+	loggerMock.Object,
+	cacheMock.Object
+	);
 
   var result = await service.UpdateAsync(1, dto);
 
@@ -262,6 +284,7 @@ public class ProductServiceTests
  {
 	 var repositoryMock = new Mock<IProductRepository>();
 	 var loggerMock = new Mock<ILogger<ProductService>>();
+	 var cacheMock = new Mock<ICacheService>();
 
 	 var products = new List<Product>
 	 {
@@ -280,7 +303,9 @@ public class ProductServiceTests
 
 	 var service = new ProductService(
 		 repositoryMock.Object,
-		 loggerMock.Object);
+		 loggerMock.Object,
+		 cacheMock.Object
+		 );
 
 	 var result = await service.GetAllAsync(1, 10, 2);
 	 
@@ -295,5 +320,166 @@ public class ProductServiceTests
 		 r => r.CountAsync(2), Times.Once);
  }
 
+ [Fact]
+ public async Task GetByIdAsync_CacheMiss_GetsFromRepository()
+ {
+	 //Arrange
+	 var repositoryMock = new Mock<IProductRepository>();
+	 var loggerMock = new Mock<ILogger<ProductService>>();
+	 var cacheMock = new Mock<ICacheService>();
+
+	 var product = new Product("MacBook Pro", 65000)
+	 {
+		 Id = 1,
+		 CategoryId = 1
+	 };
+	 
+	 //Cache boş: Get<Product> null dönecek
+	 cacheMock
+		 .Setup(c => c.Get<Product>("product_1"))
+		 .Returns((Product?)null);
+
+	 repositoryMock
+		 .Setup(r => r.GetByIdAsync(1))
+		 .ReturnsAsync(product);
+
+	 var service = new ProductService(
+		 repositoryMock.Object,
+		 loggerMock.Object,
+		 cacheMock.Object);
+	 
+	 //Act
+	 var result = await service.GetByIdAsync(1);
+	 
+	 //Assert
+	 Assert.Equal("MacBook Pro", result.Name);
+	 
+	 repositoryMock
+		 .Verify(r => r.GetByIdAsync(1),
+			 Times.Once);
+	 
+	 cacheMock
+		 .Verify(c => c.Set(
+			 "product_1",
+			 product,
+			 TimeSpan.FromMinutes(5)),
+			 Times.Once);
+	}
+
+ [Fact]
+ public async Task GetByIdAsync_CacheHit_DoeNotCallRepository()
+ {
+	 var repositoryMock = new Mock<IProductRepository>();
+	 var loggerMock = new Mock<ILogger<ProductService>>();
+	 var cacheMock = new Mock<ICacheService>();
+
+	 var cachedProduct = new Product("MacBook Pro", 65000)
+	 {
+		 Id = 1,
+		 CategoryId = 1
+	 };
+	 
+	 //Ürün cache'te var
+	 cacheMock
+		 .Setup(r => r.Get<Product>("product_1"))
+		 .Returns(cachedProduct);
+
+	 var service = new ProductService(
+		 repositoryMock.Object,
+		 loggerMock.Object,
+		 cacheMock.Object);
+	 
+	 //Act
+	 var result = await service.GetByIdAsync(1);
+	 
+	 //Assert
+	 Assert.Equal("MacBook Pro", result.Name);
+	 
+	 repositoryMock
+		 .Verify(r => r.GetByIdAsync(It.IsAny<int>()),
+			 Times.Never);
+
+ }
+
+ [Fact]
+ public async Task UpdateAsync_RemoveProductFromCache()
+ {
+	 //Arrange
+	 var repositoryMock = new Mock<IProductRepository>();
+	 var loggerMock = new Mock<ILogger<ProductService>>();
+	 var cacheMock = new Mock<ICacheService>();
+
+	 var product = new Product("MacBook Pro", 65000)
+	 {
+		 Id = 1,
+		 CategoryId = 1
+	 };
+
+	 var dto = new UpdateProductDto
+	 {
+		Name = "MacBook Pro M4",
+		Price = 70000
+	 };
+
+	 repositoryMock
+		 .Setup(r => r.GetByIdAsync(1))
+		 .ReturnsAsync(product);
+
+	 var service = new ProductService(
+		 repositoryMock.Object,
+		 loggerMock.Object,
+		 cacheMock.Object
+		 );
+	 
+	 // Act
+	 await service.UpdateAsync(1, dto);
+	 
+	 // Assert
+	 repositoryMock
+		 .Verify(r => r.UpdateAsync(product),
+			 Times.Once);
+	 
+	 cacheMock
+		 .Verify(c => c.Remove("product_1"),
+			 Times.Once);
+ }
+
+ [Fact]
+ public async Task DeleteAsync_RemovesProductFromCache()
+ {
+	 // Arrange
+	 var repositoryMock = new Mock<IProductRepository>();
+	 var loggerMock = new Mock<ILogger<ProductService>>();
+	 var cacheMock = new Mock<ICacheService>();
+
+	 var product = new Product("MacBook Pro", 65000)
+	 {
+		Id = 1,
+		CategoryId = 1
+	 };
+
+	 repositoryMock
+		 .Setup(r => r.GetByIdAsync(1))
+		 .ReturnsAsync(product);
+
+	 var service = new ProductService(
+		 repositoryMock.Object,
+		 loggerMock.Object,
+		 cacheMock.Object
+		 );
+	 
+	 // Act
+	 await service.DeleteAsync(1);
+	 
+	 // Assert
+	 repositoryMock
+		 .Verify(r => r.DeleteAsync(product),
+			 Times.Once);
+	 
+	 cacheMock
+		 .Verify(c => c.Remove("product_1"),
+			 Times.Once);
+
+ }
 }
 
